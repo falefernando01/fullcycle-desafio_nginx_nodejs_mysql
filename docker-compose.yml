@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+
+  app:
+    build:
+      context: node
+    container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 60s docker-entrypoint.sh node index.js
+    volumes:
+      - ./node:/usr/src/app
+    tty: true
+    depends_on:
+      - db    
+    networks:
+      - desafionet
+
+  db:
+    build: 
+      context: ./mysql
+    container_name: db
+    restart: always
+    tty: true
+    environment: 
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - desafionet
+
+  nginx:
+    build: 
+      context: nginx
+    container_name: nginx
+    restart: always
+    networks: 
+      - desafionet
+    depends_on: 
+      - app    
+    ports:  
+      - "8080:80"
+
+networks:
+  desafionet:
+    driver: bridge
